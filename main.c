@@ -2,6 +2,7 @@
 #include <argp.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 
 const char *argp_program_version = "bluesky 0.1";
 const char *argp_program_bug_address = "<m@stdwtr.io>";
