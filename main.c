@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <argp.h>
 #include <stdbool.h>
+#include <string.h>
 
 const char *argp_program_version = "bluesky 0.1";
 const char *argp_program_bug_address = "<m@stdwtr.io>";
@@ -63,20 +64,35 @@ struct meta
     char *title;
 };
 
+void set_default_args(struct arguments *args)
+{
+    args->input_dir = ".";
+    args->output_dir = "./build";
+    args->verbose = false;
+    args->force = false;
+}
+
+void get_args(int argc, char **argv, struct arguments *arguments)
+{
+    struct argp argp = {options, parse_opt, args_doc, doc};
+
+    error_t rc = argp_parse(&argp, argc, argv, 0, 0, arguments);
+    if (rc != 0) {
+        printf("argp_parse failed: %s\n", strerror(rc));
+        exit(rc);
+    }
+    if (arguments->verbose) {
+        printf("input_dir: %s\n", arguments->input_dir);
+        printf("output_dir: %s\n", arguments->output_dir);
+        printf("verbose: %d\n", arguments->verbose);
+        printf("force: %d\n", arguments->force);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     struct arguments arguments;
-    struct argp argp = {options, parse_opt, args_doc, doc};
-    arguments.input_dir = ".";
-    arguments.output_dir = "./build";
-    arguments.verbose = false;
-    arguments.force = false;
-    argp_parse(&argp, argc, argv, 0, 0, &arguments);
-    if (arguments.verbose) {
-        printf("input_dir: %s\n", arguments.input_dir);
-        printf("output_dir: %s\n", arguments.output_dir);
-        printf("verbose: %d\n", arguments.verbose);
-        printf("force: %d\n", arguments.force);
-    }
+    set_default_args(&arguments);
+    get_args(argc, argv, &arguments);
     return 0;
 }
