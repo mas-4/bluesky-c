@@ -60,7 +60,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
     return 0;
 }
 
-struct meta
+struct Meta
 {
     char *title;
 };
@@ -90,10 +90,38 @@ void get_args(int argc, char **argv, struct arguments *arguments)
     }
 }
 
+void parse_meta(char *input_dir, struct Meta *meta)
+{
+    char *meta_file = malloc(strlen(input_dir) + strlen("/meta") + 1);
+    strcpy(meta_file, input_dir);
+    strcat(meta_file, "/meta");
+    FILE *fp = fopen(meta_file, "r");
+    if (fp == NULL) {
+        printf("Could not open meta\n");
+        exit(1);
+    }
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
+    while ((read = getline(&line, &len, fp)) != -1) {
+        if (strstr(line, "title") != NULL) {
+            strtok(line, "="); // ignore title
+            meta->title = strtok(NULL, "=");
+        }
+    }
+    fclose(fp);
+    free(meta_file);
+}
+
 int main(int argc, char *argv[])
 {
     struct arguments arguments;
     set_default_args(&arguments);
     get_args(argc, argv, &arguments);
+    struct Meta meta;
+    parse_meta(arguments.input_dir, &meta);
+    if (arguments.verbose) {
+        printf("title: %s\n", meta.title);
+    }
     return 0;
 }
