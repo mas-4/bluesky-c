@@ -34,12 +34,25 @@ struct arguments
     bool force;
 };
 
-struct arguments args = {
-   .input_dir = ".",
-   .output_dir = "./build",
-   .verbose = false,
-   .force = false,
+struct Meta
+{
+    char *title;
 };
+
+struct arguments args = {
+        .input_dir = ".",
+        .output_dir = "./build",
+        .verbose = false,
+        .force = false,
+};
+
+struct Meta meta = {
+        .title = "",
+};
+
+char **files = NULL;
+int files_count = 0;
+int files_capacity = 0;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
@@ -83,11 +96,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
     return 0;
 }
 
-struct Meta
-{
-    char *title;
-};
-
 void get_args(int argc, char **argv)
 {
     struct argp argp = {options, parse_opt, args_doc, doc};
@@ -100,6 +108,7 @@ void get_args(int argc, char **argv)
     }
     if (args.verbose)
     {
+        printf("*** args ***\n");
         printf("input_dir: %s\n", args.input_dir);
         printf("output_dir: %s\n", args.output_dir);
         printf("verbose: %d\n", args.verbose);
@@ -107,7 +116,7 @@ void get_args(int argc, char **argv)
     }
 }
 
-void parse_meta(char *input_dir, struct Meta *meta)
+void parse_meta(char *input_dir)
 {
     char *meta_file = malloc(strlen(input_dir) + strlen("/meta") + 1);
     strcpy(meta_file, input_dir);
@@ -125,30 +134,37 @@ void parse_meta(char *input_dir, struct Meta *meta)
         if (strstr(line, "title") != NULL)
         {
             strtok(line, "="); // ignore title
-            meta->title = strtok(NULL, "=");
+            meta.title = strtok(NULL, "=");
         }
+    }
+    if (args.verbose)
+    {
+        printf("\n*** meta ***\n");
+        printf("title: %s\n", meta.title);
     }
     fclose(fp);
     free(meta_file);
 }
 
-char **files = NULL;
-int files_count = 0;
-int files_capacity = 0;
 
 int add_file(const char *fpath, const struct stat *sb,
              int typeflag, struct FTW *ftwbuf)
 {
-    if (typeflag == FTW_F)
+    if (typeflag != FTW_F)
     {
-        if (files_count == files_capacity)
-        {
-            files_capacity *= 2;
-            files = realloc(files, files_capacity * sizeof(char *));
-        }
-        files[files_count] = strdup(fpath);
-        files_count++;
+        return 0;
     }
+    if (strcmp(&fpath[ftwbuf->base], "meta") == 0)
+    {
+        return 0;
+    }
+    if (files_count == files_capacity)
+    {
+        files_capacity *= 2;
+        files = realloc(files, files_capacity * sizeof(char *));
+    }
+    files[files_count] = strdup(fpath);
+    files_count++;
     return 0;
 }
 
@@ -160,7 +176,7 @@ void populate_file_list()
     nftw(args.input_dir, add_file, 10, FTW_PHYS);
     if (args.verbose)
     {
-        printf("*** Files ***\n");
+        printf("\n*** files ***\n");
         printf("files_count: %d\n", files_count);
         for (int i = 0; i < files_count; i++)
         {
@@ -181,13 +197,9 @@ void teardown()
 int main(int argc, char *argv[])
 {
     get_args(argc, argv);
-    struct Meta meta;
-    parse_meta(args.input_dir, &meta);
-    if (args.verbose)
-    {
-        printf("title: %s\n", meta.title);
-    }
+    parse_meta(args.input_dir);
     populate_file_list();
+
     teardown();
     return 0;
 }
