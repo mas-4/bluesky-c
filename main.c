@@ -1,8 +1,18 @@
+#define _XOPEN_SOURCE 700   /* See feature_test_macros(7) */
+#define _LARGEFILE64_SOURCE
+#define _FILE_OFFSET_BITS 64
+
 #include <stdio.h>
 #include <argp.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include <ftw.h>
+
+#ifndef USE_FDS
+#define USE_FDS 15
+#endif
 
 const char *argp_program_version = "bluesky 0.1";
 const char *argp_program_bug_address = "<m@stdwtr.io>";
@@ -22,6 +32,13 @@ struct arguments
     char *output_dir;
     bool verbose;
     bool force;
+};
+
+struct arguments args = {
+   .input_dir = ".",
+   .output_dir = "./build",
+   .verbose = false,
+   .force = false,
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
@@ -71,30 +88,22 @@ struct Meta
     char *title;
 };
 
-void set_default_args(struct arguments *args)
-{
-    args->input_dir = ".";
-    args->output_dir = "./build";
-    args->verbose = false;
-    args->force = false;
-}
-
-void get_args(int argc, char **argv, struct arguments *arguments)
+void get_args(int argc, char **argv)
 {
     struct argp argp = {options, parse_opt, args_doc, doc};
 
-    error_t rc = argp_parse(&argp, argc, argv, 0, 0, arguments);
+    error_t rc = argp_parse(&argp, argc, argv, 0, 0, &args);
     if (rc != 0)
     {
         printf("argp_parse failed: %s\n", strerror(rc));
         exit(rc);
     }
-    if (arguments->verbose)
+    if (args.verbose)
     {
-        printf("input_dir: %s\n", arguments->input_dir);
-        printf("output_dir: %s\n", arguments->output_dir);
-        printf("verbose: %d\n", arguments->verbose);
-        printf("force: %d\n", arguments->force);
+        printf("input_dir: %s\n", args.input_dir);
+        printf("output_dir: %s\n", args.output_dir);
+        printf("verbose: %d\n", args.verbose);
+        printf("force: %d\n", args.force);
     }
 }
 
@@ -123,16 +132,62 @@ void parse_meta(char *input_dir, struct Meta *meta)
     free(meta_file);
 }
 
+char **files = NULL;
+int files_count = 0;
+int files_capacity = 0;
+
+int add_file(const char *fpath, const struct stat *sb,
+             int typeflag, struct FTW *ftwbuf)
+{
+    if (typeflag == FTW_F)
+    {
+        if (files_count == files_capacity)
+        {
+            files_capacity *= 2;
+            files = realloc(files, files_capacity * sizeof(char *));
+        }
+        files[files_count] = strdup(fpath);
+        files_count++;
+    }
+    return 0;
+}
+
+void populate_file_list()
+{
+    files_count = 0;
+    files_capacity = 10;
+    files = malloc(files_capacity * sizeof(char *));
+    nftw(args.input_dir, add_file, 10, FTW_PHYS);
+    if (args.verbose)
+    {
+        printf("*** Files ***\n");
+        printf("files_count: %d\n", files_count);
+        for (int i = 0; i < files_count; i++)
+        {
+            printf("%s\n", files[i]);
+        }
+    }
+}
+
+void teardown()
+{
+    for (int i = 0; i < files_count; i++)
+    {
+        free(files[i]);
+    }
+    free(files);
+}
+
 int main(int argc, char *argv[])
 {
-    struct arguments arguments;
-    set_default_args(&arguments);
-    get_args(argc, argv, &arguments);
+    get_args(argc, argv);
     struct Meta meta;
-    parse_meta(arguments.input_dir, &meta);
-    if (arguments.verbose)
+    parse_meta(args.input_dir, &meta);
+    if (args.verbose)
     {
         printf("title: %s\n", meta.title);
     }
+    populate_file_list();
+    teardown();
     return 0;
 }
