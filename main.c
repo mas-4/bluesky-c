@@ -6,6 +6,12 @@
 
 #include <string.h>
 
+extern struct Arguments args;
+extern struct RawPage *raw_pages;
+extern size_t n_raw_pages;
+extern struct RawImport *raw_imports;
+extern size_t n_raw_imports;
+
 // find all indices of bluesky markers ("<bluesky-") in file
 int find_all_bluesky_markers(char *file, int *indices)
 {
