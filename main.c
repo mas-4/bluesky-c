@@ -62,21 +62,8 @@ enum ImportType identify_import(char *str)
 
 void teardown()
 {
-    printf("%d imports\n", (int)n_raw_imports);
-    for (int i = 0; i < n_raw_imports; i++)
-    {
-        free(raw_imports[i].path);
-        free(raw_imports[i].name);
-        free(raw_imports[i].content);
-    }
-    free(raw_imports);
-    for (int i = 0; i < n_raw_pages; i++)
-    {
-        free(raw_pages[i].path);
-        free(raw_pages[i].name);
-        free(raw_pages[i].content);
-    }
-    free(raw_pages);
+    free_meta();
+    free_raw_files();
 }
 
 int main(int argc, char *argv[])

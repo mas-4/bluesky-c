@@ -39,4 +39,6 @@ struct RawImport
 
 void populate_file_list();
 
+void free_raw_files();
+
 #endif //BLUESKY_RAW_FILES_H

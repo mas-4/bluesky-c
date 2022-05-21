@@ -132,3 +132,22 @@ void populate_file_list()
         }
     }
 }
+
+void free_raw_files()
+{
+    printf("%d imports\n", (int)n_raw_imports);
+    for (int i = 0; i < n_raw_imports; i++)
+    {
+        free(raw_imports[i].path);
+        free(raw_imports[i].name);
+        free(raw_imports[i].content);
+    }
+    free(raw_imports);
+    for (int i = 0; i < n_raw_pages; i++)
+    {
+        free(raw_pages[i].path);
+        free(raw_pages[i].name);
+        free(raw_pages[i].content);
+    }
+    free(raw_pages);
+}

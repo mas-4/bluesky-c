@@ -4,6 +4,7 @@
 
 #include "meta.h"
 #include "arguments.h"
+#include "constants.h"
 #include <string.h>
 #include <malloc.h>
 #include <stdlib.h>
@@ -31,8 +32,8 @@ void parse_meta(char *input_dir)
     {
         if (strstr(line, "title") != NULL)
         {
-            strtok(line, "="); // ignore title
-            meta.title = strtok(NULL, "=");
+            strtok(line, META_TOKEN); // ignore title
+            meta.title = strdup(strtok(NULL, META_TOKEN));
         }
     }
     if (args.verbose)
@@ -42,4 +43,10 @@ void parse_meta(char *input_dir)
     }
     fclose(fp);
     free(meta_file);
+    free(line);
+}
+
+void free_meta()
+{
+    free(meta.title);
 }
