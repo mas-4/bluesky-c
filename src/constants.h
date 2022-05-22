@@ -8,5 +8,6 @@
 #define IMPORTS_DIR "_imports"
 #define META_FILE "meta"
 #define META_TOKEN "="
+#define BLUESKY_IDENTIFIER "<bluesky-"
 
 #endif //BLUESKY_CONSTANTS_H
