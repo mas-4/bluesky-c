@@ -33,5 +33,6 @@ struct RenderedFile
 void process_imports();
 void process_files();
 void write_files();
+void free_rendered();
 
 #endif //BLUESKY_RENDERING_H

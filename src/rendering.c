@@ -72,8 +72,8 @@ void add_import(struct Import *import)
 void parse_include(struct RawImport *raw_import)
 {
     struct Import import = {
-            .name = raw_import->name,
-            .content = raw_import->content,
+            .name = strdup(raw_import->name),
+            .content = strdup(raw_import->content),
             .type = IT_INCLUDE
     };
     add_import(&import);
@@ -268,4 +268,20 @@ void write_files()
         fprintf(f, "%s", rendered_file->content);
         fclose(f);
     }
+}
+
+void free_rendered()
+{
+    for (int i = 0; i < n_imports; i++)
+    {
+        struct Import *import = &imports[i];
+        free(import->content);
+    }
+    free(imports);
+    for (int i = 0; i < n_rendered_files; i++)
+    {
+        free(rendered_files[i].content);
+        free(rendered_files[i].path);
+    }
+    free(rendered_files);
 }

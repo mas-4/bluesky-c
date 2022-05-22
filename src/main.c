@@ -14,6 +14,7 @@ void teardown()
 {
     free_meta();
     free_raw_files();
+    free_rendered();
 }
 
 int main(int argc, char *argv[])
