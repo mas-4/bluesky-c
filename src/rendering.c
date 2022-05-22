@@ -6,6 +6,7 @@
 #include "raw_files.h"
 #include "arguments.h"
 #include <stdlib.h>
+#include <libgen.h>
 
 extern struct RawImport *raw_imports;
 extern size_t n_raw_imports;
@@ -78,18 +79,6 @@ void parse_include(struct RawImport *raw_import)
     add_import(&import);
 }
 
-void process_imports()
-{
-    for (int i = 0; i < n_raw_imports; i++)
-    {
-        struct RawImport *raw_import = &raw_imports[i];
-        if (strncmp(raw_import->name, "_", 1) == 0)
-        {
-            parse_include(raw_import);
-        }
-    }
-}
-
 struct Import *get_import(char *name, enum ImportType type)
 {
     for (int i = 0; i < n_imports; i++)
@@ -141,10 +130,10 @@ char *process_include(char *marker, char *content)
     return new_content;
 }
 
-char *process_file(const char *content)
+char *process_file(char *content)
 {
     char *new_content = strdup(content);
-    int next_marker = 0;
+    int next_marker;
     char *head = new_content;
     while ((next_marker = find_next_bluesky_import(head)) != -1)
     {
@@ -179,6 +168,24 @@ char *process_file(const char *content)
     return new_content;
 }
 
+char *parse_out_path(char *file_path)
+{
+    char *bname = basename(file_path);
+    int slash = args.output_dir[strlen(args.output_dir) - 1] != '/';
+    char *output_file_path = malloc(
+            strlen(args.output_dir)
+            + slash
+            + strlen(bname)
+            + 1);
+    strcpy(output_file_path, args.output_dir);
+    if (slash != 0)
+    {
+        strcat(output_file_path, "/");
+    }
+    strcat(output_file_path, bname);
+    return output_file_path;
+}
+
 void add_rendered_file(struct RawPage *raw_page, char *content)
 {
     if (cap_rendered_files == 0)
@@ -194,17 +201,21 @@ void add_rendered_file(struct RawPage *raw_page, char *content)
     }
     struct RenderedFile *rendered_file = &rendered_files[n_rendered_files];
     rendered_file->content = content;
-    char *inner_path = strdup(raw_page->path + strlen(args.input_dir));
-    char *path = malloc(strlen(args.output_dir) + strlen(inner_path) + 1);
-    strcat(path, args.output_dir);
-    if (strcmp(args.output_dir, "/") != 0)
-    {
-        strcat(path, "/");
-    }
-    strcat(path, inner_path);
+    char *path = parse_out_path(raw_page->path);
     rendered_file->path = path;
     n_rendered_files++;
-    free(inner_path);
+}
+
+void process_imports()
+{
+    for (int i = 0; i < n_raw_imports; i++)
+    {
+        struct RawImport *raw_import = &raw_imports[i];
+        if (strncmp(raw_import->name, "_", 1) == 0)
+        {
+            parse_include(raw_import);
+        }
+    }
 }
 
 void process_files()
@@ -217,12 +228,43 @@ void process_files()
     }
 }
 
+// https://stackoverflow.com/questions/2336242/recursive-mkdir-system-call-on-unix
+static void _mkdir(const char *dir) {
+    char tmp[256];
+    char *p = NULL;
+    size_t len;
+
+    snprintf(tmp, sizeof(tmp),"%s",dir);
+    len = strlen(tmp);
+    if (tmp[len - 1] == '/')
+        tmp[len - 1] = 0;
+    for (p = tmp + 1; *p; p++)
+        if (*p == '/') {
+            *p = 0;
+            mkdir(tmp, S_IRWXU);
+            *p = '/';
+        }
+    mkdir(tmp, S_IRWXU);
+}
+
+
 void write_files()
 {
     for (int i = 0; i < n_rendered_files; i++)
     {
         struct RenderedFile *rendered_file = &rendered_files[i];
+        char *tmp = strdup(rendered_file->path);
+        char *dir_path = dirname(tmp);
+        _mkdir(dir_path);
+        free(tmp);
+        printf("Writing %s\n", rendered_file->path);
         FILE *f = fopen(rendered_file->path, "w");
+        if (f == NULL)
+        {
+            fprintf(stderr, "Could not open file %s\n", rendered_file->path);
+            fprintf(stderr, "Error: %s\n", strerror(errno));
+            exit(1);
+        }
         fprintf(f, "%s", rendered_file->content);
         fclose(f);
     }

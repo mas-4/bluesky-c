@@ -43,15 +43,9 @@ void save_page(char *page_path)
         return;
     }
     fseek(fp, 0, SEEK_SET);
-    char *content = malloc(
-            raw_pages[n_raw_pages].content_size
-    );
-    fread(
-            content,
-            raw_pages[n_raw_pages].content_size,
-            1,
-            fp
-    );
+    char *content = malloc(raw_pages[n_raw_pages].content_size + 1);
+    fread(content, content_size, 1, fp);
+    content[content_size] = '\0';
     raw_pages[n_raw_pages].content = content;
     fclose(fp);
     n_raw_pages++;
@@ -77,17 +71,13 @@ void save_import(char *import_path)
         exit(1);
     }
     fseek(fp, 0, SEEK_END);
-    raw_imports[n_raw_imports].content_size = ftell(fp);
+    int content_size = (int)ftell(fp);
+    raw_imports[n_raw_imports].content_size = content_size;
     fseek(fp, 0, SEEK_SET);
-    raw_imports[n_raw_imports].content = malloc(
-            raw_imports[n_raw_imports].content_size
-    );
-    fread(
-            raw_imports[n_raw_imports].content,
-            raw_imports[n_raw_imports].content_size,
-            1,
-            fp
-    );
+    char *content = malloc(content_size + 1);
+    fread(content, content_size, 1, fp);
+    content[content_size] = '\0';
+    raw_imports[n_raw_imports].content = content;
     fclose(fp);
     n_raw_imports++;
 }
