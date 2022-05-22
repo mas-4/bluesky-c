@@ -35,17 +35,24 @@ void save_page(char *page_path)
         exit(1);
     }
     fseek(fp, 0, SEEK_END);
-    raw_pages[n_raw_pages].content_size = ftell(fp);
+    int content_size = (int)ftell(fp);
+    raw_pages[n_raw_pages].content_size = content_size;
+    if (content_size == 0)
+    {
+        fclose(fp);
+        return;
+    }
     fseek(fp, 0, SEEK_SET);
-    raw_pages[n_raw_pages].content = malloc(
+    char *content = malloc(
             raw_pages[n_raw_pages].content_size
     );
     fread(
-            raw_pages[n_raw_pages].content,
+            content,
             raw_pages[n_raw_pages].content_size,
             1,
             fp
     );
+    raw_pages[n_raw_pages].content = content;
     fclose(fp);
     n_raw_pages++;
 }
@@ -97,6 +104,10 @@ int add_file(
         return 0;
     }
     if (strcmp(&fpath[ftwbuf->base], META_FILE) == 0)
+    {
+        return 0;
+    }
+    if (sb->st_size == 0)
     {
         return 0;
     }
