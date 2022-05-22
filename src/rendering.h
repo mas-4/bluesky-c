@@ -6,24 +6,6 @@
 #define BLUESKY_RENDERING_H
 
 
-enum ImportType
-{
-    IT_INCLUDE,
-    IT_TEMPLATE,
-    IT_MARKDOWN,
-    IT_PLACEHOLDER
-};
-
-
-struct Import
-{
-    char *path;
-    char *name;
-    char *content;
-    int *indices;
-    enum ImportType type;
-};
-
 struct RenderedFile
 {
     char *path;

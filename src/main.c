@@ -4,6 +4,7 @@
 #include "arguments.h"
 #include "meta.h"
 #include "rendering.h"
+#include "imports.h"
 
 #include <string.h>
 
@@ -15,6 +16,7 @@ void teardown()
     free_meta();
     free_raw_files();
     free_rendered();
+    free_imports();
 }
 
 int main(int argc, char *argv[])

@@ -136,7 +136,6 @@ void populate_file_list()
 
 void free_raw_files()
 {
-    printf("%d imports\n", (int)n_raw_imports);
     for (int i = 0; i < n_raw_imports; i++)
     {
         free(raw_imports[i].path);
