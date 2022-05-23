@@ -96,18 +96,6 @@ void add_rendered_file(struct RawPage *raw_page, char *content)
     n_rendered_files++;
 }
 
-void process_imports()
-{
-    for (int i = 0; i < n_raw_imports; i++)
-    {
-        struct RawImport *raw_import = &raw_imports[i];
-        if (strncmp(raw_import->name, "_", 1) == 0)
-        {
-            parse_include(raw_import);
-        }
-    }
-}
-
 void process_files()
 {
     for (int i = 0; i < n_raw_pages; i++)
@@ -119,7 +107,7 @@ void process_files()
 }
 
 // https://stackoverflow.com/questions/2336242/recursive-mkdir-system-call-on-unix
-static void _mkdir(const char *dir) {
+static void make_path(const char *dir) {
     char tmp[256];
     char *p = NULL;
     size_t len;
@@ -145,7 +133,7 @@ void write_files()
         struct RenderedFile *rendered_file = &rendered_files[i];
         char *tmp = strdup(rendered_file->path);
         char *dir_path = dirname(tmp);
-        _mkdir(dir_path);
+        make_path(dir_path);
         free(tmp);
         FILE *f = fopen(rendered_file->path, "w");
         if (f == NULL)

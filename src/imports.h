@@ -29,6 +29,7 @@ char *process_include(char *marker, char *content);
 int find_next_bluesky_import(char *file);
 enum ImportType identify_import(char *str);
 void parse_include(struct RawImport *raw_import);
+void process_imports();
 void free_imports();
 
 #endif //BLUESKY_IMPORTS_H

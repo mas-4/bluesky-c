@@ -6,8 +6,6 @@
 #include "rendering.h"
 #include "imports.h"
 
-#include <string.h>
-
 extern struct Arguments args;
 
 

@@ -4,6 +4,7 @@
 
 #include "imports.h"
 #include "constants.h"
+#include "raw_files.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -18,6 +19,9 @@ int n_import_types = sizeof(import_type_identifiers) / sizeof(char const *);
 struct Import *imports = NULL;
 size_t n_imports = 0;
 size_t cap_imports = 0;
+
+extern int n_raw_imports;
+extern struct RawImport *raw_imports;
 
 enum ImportType identify_import(char *str)
 {
@@ -117,6 +121,18 @@ char *process_include(char *marker, char *content)
     char *after_marker = strstr(marker, ">") + 1;
     strcat(new_content, after_marker);
     return new_content;
+}
+
+void process_imports()
+{
+    for (int i = 0; i < n_raw_imports; i++)
+    {
+        struct RawImport *raw_import = &raw_imports[i];
+        if (strncmp(raw_import->name, "_", 1) == 0)
+        {
+            parse_include(raw_import);
+        }
+    }
 }
 
 void free_imports()
