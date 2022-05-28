@@ -142,6 +142,7 @@ void write_files()
             fprintf(stderr, "Error: %s\n", strerror(errno));
             exit(1);
         }
+        fprintf(f, "%s", rendered_file->content);
         fclose(f);
     }
 }
