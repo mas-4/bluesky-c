@@ -18,11 +18,20 @@ enum ImportType
 
 struct Import
 {
-    char *path;
     char *name;
     char *content;
     int *indices;
     enum ImportType type;
+    struct slot *slots;
+    size_t n_slots;
+    size_t slot_cap;
+};
+
+struct slot
+{
+    char *name;
+    int start;
+    int end;
 };
 
 char *process_include(char *marker, char *content);
